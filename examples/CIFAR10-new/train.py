@@ -20,11 +20,15 @@ from __future__ import print_function
 import keras
 # CPU needs NHWC format for MaxPool / FusedBatchNorm
 keras.backend.set_image_data_format('channels_last')
-from keras.datasets import cifar10
-import numpy as np
-import model
 
-import tensorflow as tf
+from keras.callbacks import ModelCheckpoint
+from keras.datasets import cifar10
+from keras.preprocessing.image import ImageDataGenerator
+from keras import backend as K
+
+import numpy as np
+import squeezenet
+#import tensorflow as tf
 import time
 from datetime import datetime
 import os
@@ -34,110 +38,59 @@ import sys
 FLAGS = None
 
 
-def main(_):
-    # Disable mnist dataset deprecation warning
-    tf.logging.set_verbosity(tf.logging.ERROR)
-
+def main():
     # Import data
-    batch_size = 32
     num_classes = 10
     epochs = 100
-    data_augmentation = True
-    num_predictions = 20
     NUM_TRAIN_SAMPLES = 50000
+    IMAGE_HEIGHT = IMAGE_WIDTH = 32
+    CHANNELS = 3
+
+    (x_train, y_train), (x_test, y_test) = cifar10.load_data()
+
+    if K.image_data_format() == 'channels_first':
+        x_train = x_train.reshape(x_train.shape[0], 3, IMAGE_HEIGHT,
+                                  IMAGE_WIDTH)
+        x_test = x_test.reshape(x_test.shape[0], 3, IMAGE_WIDTH, IMAGE_WIDTH)
+        input_shape = (1, IMAGE_WIDTH, IMAGE_WIDTH)
+    else:
+        x_train = x_train.reshape(x_train.shape[0], IMAGE_WIDTH, IMAGE_WIDTH,
+                                  3)
+        x_test = x_test.reshape(x_test.shape[0], IMAGE_WIDTH, IMAGE_WIDTH, 3)
+        input_shape = (IMAGE_WIDTH, IMAGE_WIDTH, 3)
 
     # The data, split between train and test sets:
-    (x_train, y_train), (x_test, y_test) = cifar10.load_data()
     print('x_train shape:', x_train.shape)
-    print(x_train.shape[0], 'train samples')
-    print(x_test.shape[0], 'test samples')
+    print(x_train.shape, 'train samples')
+    print(x_test.shape, 'test samples')
 
     # Convert class vectors to binary class matrices.
     y_train = keras.utils.to_categorical(y_train, num_classes)
     y_test = keras.utils.to_categorical(y_test, num_classes)
 
+    x_train = x_train.astype('float32')
+    x_test = x_test.astype('float32')
+    x_train /= 255
+    x_test /= 255
+
     print('y_test', y_test)
 
-    # Create the model
-    images = tf.placeholder(tf.float32, [None, 32, 32, 3])
-    is_training = tf.placeholder(bool)
+    model = squeezenet.Squeezenet()
+    opt = keras.optimizers.SGD()
 
-    # Define loss and optimizer
-    y_ = tf.placeholder(tf.float32, [None, 10])
+    # Let's train the model using RMSprop
+    model.compile(
+        loss='categorical_crossentropy', optimizer=opt, metrics=['accuracy'])
 
-    network = model.Squeezenet_CIFAR(FLAGS)
+    model.summary()
 
-    # Build network
-    unscaled_logits = network.build(images, is_training)
-
-    with tf.name_scope('loss'):
-        cross_entropy = tf.nn.softmax_cross_entropy_with_logits(
-            labels=y_, logits=unscaled_logits)
-    cross_entropy = tf.reduce_mean(cross_entropy)
-
-    with tf.name_scope('adam_optimizer'):
-        train_step = tf.train.AdamOptimizer(1e-4).minimize(cross_entropy)
-
-    with tf.name_scope('accuracy'):
-        correct_prediction = tf.equal(
-            tf.argmax(unscaled_logits, 1), tf.argmax(y_, 1))
-        correct_prediction = tf.cast(correct_prediction, tf.float32)
-    accuracy = tf.reduce_mean(correct_prediction)
-
-    with tf.Session() as sess:
-        sess.run(tf.global_variables_initializer())
-        loss_values = []
-        epoch = 0
-        for i in range(FLAGS.train_loop_count):
-            epoch = ((i + 1) * FLAGS.batch_size) // NUM_TRAIN_SAMPLES
-            print('epoch', epoch)
-            print('i', i)
-            batch_start_idx = i * FLAGS.batch_size - epoch * NUM_TRAIN_SAMPLES
-            batch_end_idx = batch_start_idx + FLAGS.batch_size
-            print('batch_start_idx', batch_start_idx)
-            print('batch_end_idx', batch_end_idx)
-
-            assert (batch_start_idx < NUM_TRAIN_SAMPLES
-                    and batch_start_idx >= 0)
-            assert (batch_end_idx < NUM_TRAIN_SAMPLES)
-
-            x_batch = x_train[batch_start_idx:batch_end_idx]
-            y_batch = y_train[batch_start_idx:batch_end_idx]
-
-            if i % 100 == 0:
-                t = time.time()
-                train_accuracy = accuracy.eval(feed_dict={
-                    images: x_batch,
-                    y_: y_batch,
-                    is_training: True
-                })
-                print('step %d, training accuracy %g, %g msec to evaluate' %
-                      (i, train_accuracy, 1000 * (time.time() - t)))
-            t = time.time()
-            _, loss = sess.run([train_step, cross_entropy],
-                               feed_dict={
-                                   images: x_batch,
-                                   y_: y_batch,
-                                   is_training: False
-                               })
-            loss_values.append(loss)
-
-            if i % 1000 == 999 or i == FLAGS.train_loop_count - 1:
-                test_accuracy = accuracy.eval(feed_dict={
-                    images: x_test,
-                    y_: y_test,
-                    is_training: False
-                })
-                print('test accuracy %g' % test_accuracy)
-
-        print("Training finished. Saving variables.")
-        for var in tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES):
-            weight = (sess.run([var]))[0].flatten().tolist()
-            filename = (str(var).split())[1].replace('/', '_')
-            filename = filename.replace("'", "").replace(':0', '') + '.txt'
-
-            print("saving", filename)
-            np.savetxt(str(filename), weight)
+    model.fit(
+    x_train,
+    y_train,
+    batch_size=batch_size,
+    epochs=epochs,
+    verbose=1,
+    validation_data=(x_test, y_test)
 
 
 if __name__ == '__main__':
@@ -162,4 +115,4 @@ if __name__ == '__main__':
                 0.0 indicates no regularization.''')
     parser.add_argument('--batch_norm_decay', type=float, default=0.9)
     FLAGS, unparsed = parser.parse_known_args()
-    tf.app.run(main=main, argv=[sys.argv[0]] + unparsed)
+    main()
