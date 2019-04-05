@@ -18,6 +18,8 @@ from __future__ import division
 from __future__ import print_function
 
 import keras
+# CPU needs NCHW format
+keras.backend.set_image_data_format('channels_first')
 from keras.datasets import cifar10
 import numpy as np
 import model
@@ -29,7 +31,7 @@ import os
 import argparse
 import sys
 
-args = None
+FLAGS = None
 
 
 def main(_):
@@ -42,6 +44,7 @@ def main(_):
     epochs = 100
     data_augmentation = True
     num_predictions = 20
+    NUM_TRAIN_SAMPLES = 50000
 
     # The data, split between train and test sets:
     (x_train, y_train), (x_test, y_test) = cifar10.load_data()
@@ -56,60 +59,74 @@ def main(_):
     print('y_test', y_test)
 
     # Create the model
-    images = tf.placeholder(tf.float32, [None, 32, 32, 3])
+    images = tf.placeholder(tf.float32, [None, 3, 32, 32])
     is_training = tf.placeholder(bool)
 
     # Define loss and optimizer
     y_ = tf.placeholder(tf.float32, [None, 10])
 
-    network = model.Squeezenet_CIFAR(args)
+    network = model.Squeezenet_CIFAR(FLAGS)
 
     # Build network
     unscaled_logits = network.build(images, is_training)
 
-    # Build the graph for the deep net
-
     with tf.name_scope('loss'):
         cross_entropy = tf.nn.softmax_cross_entropy_with_logits(
-            labels=y_, logits=y_conv)
+            labels=y_, logits=unscaled_logits)
     cross_entropy = tf.reduce_mean(cross_entropy)
 
     with tf.name_scope('adam_optimizer'):
         train_step = tf.train.AdamOptimizer(1e-4).minimize(cross_entropy)
 
     with tf.name_scope('accuracy'):
-        correct_prediction = tf.equal(tf.argmax(y_conv, 1), tf.argmax(y_, 1))
+        correct_prediction = tf.equal(
+            tf.argmax(unscaled_logits, 1), tf.argmax(y_, 1))
         correct_prediction = tf.cast(correct_prediction, tf.float32)
     accuracy = tf.reduce_mean(correct_prediction)
 
     with tf.Session() as sess:
         sess.run(tf.global_variables_initializer())
         loss_values = []
+        epoch = 0
         for i in range(FLAGS.train_loop_count):
-            batch = mnist.train.next_batch(FLAGS.batch_size)
+            epoch = ((i + 1) * FLAGS.batch_size) // NUM_TRAIN_SAMPLES
+            print('epoch', epoch)
+            print('i', i)
+            batch_start_idx = i * FLAGS.batch_size - epoch * NUM_TRAIN_SAMPLES
+            batch_end_idx = batch_start_idx + FLAGS.batch_size
+            print('batch_start_idx', batch_start_idx)
+            print('batch_end_idx', batch_end_idx)
+
+            assert (batch_start_idx < NUM_TRAIN_SAMPLES
+                    and batch_start_idx >= 0)
+            assert (batch_end_idx < NUM_TRAIN_SAMPLES)
+
+            x_batch = x_train[batch_start_idx:batch_end_idx]
+            y_batch = y_train[batch_start_idx:batch_end_idx]
+
             if i % 100 == 0:
                 t = time.time()
                 train_accuracy = accuracy.eval(feed_dict={
-                    x: batch[0],
-                    y_: batch[1]
+                    images: x_batch,
+                    y_: y_batch,
+                    is_training: True
                 })
                 print('step %d, training accuracy %g, %g msec to evaluate' %
                       (i, train_accuracy, 1000 * (time.time() - t)))
             t = time.time()
             _, loss = sess.run([train_step, cross_entropy],
                                feed_dict={
-                                   x: batch[0],
-                                   y_: batch[1]
+                                   images: x_batch,
+                                   y_: y_batch,
+                                   is_training: False
                                })
             loss_values.append(loss)
 
             if i % 1000 == 999 or i == FLAGS.train_loop_count - 1:
-                x_test = mnist.test.images[:FLAGS.test_image_count]
-                y_test = mnist.test.labels[:FLAGS.test_image_count]
-
                 test_accuracy = accuracy.eval(feed_dict={
-                    x: x_test,
-                    y_: y_test
+                    images: x_test,
+                    y_: y_test,
+                    is_training: False
                 })
                 print('test accuracy %g' % test_accuracy)
 
@@ -144,5 +161,5 @@ if __name__ == '__main__':
         help='''L2 regularization factor for convolution layer weights.
                 0.0 indicates no regularization.''')
     parser.add_argument('--batch_norm_decay', type=float, default=0.9)
-    args, unparsed = parser.parse_known_args()
+    FLAGS, unparsed = parser.parse_known_args()
     tf.app.run(main=main, argv=[sys.argv[0]] + unparsed)
