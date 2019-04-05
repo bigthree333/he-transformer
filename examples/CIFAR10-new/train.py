@@ -18,8 +18,8 @@ from __future__ import division
 from __future__ import print_function
 
 import keras
-# CPU needs NCHW format
-keras.backend.set_image_data_format('channels_first')
+# CPU needs NHWC format for MaxPool / FusedBatchNorm
+keras.backend.set_image_data_format('channels_last')
 from keras.datasets import cifar10
 import numpy as np
 import model
@@ -59,7 +59,7 @@ def main(_):
     print('y_test', y_test)
 
     # Create the model
-    images = tf.placeholder(tf.float32, [None, 3, 32, 32])
+    images = tf.placeholder(tf.float32, [None, 32, 32, 3])
     is_training = tf.placeholder(bool)
 
     # Define loss and optimizer

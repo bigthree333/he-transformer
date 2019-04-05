@@ -32,7 +32,7 @@ def _squeeze(inputs, num_outputs):
         inputs,
         num_outputs, [1, 1],
         stride=1,
-        data_format='NCHW',
+        data_format='NHWC',
         scope='squeeze')
 
 
@@ -42,11 +42,11 @@ def _expand(inputs, num_outputs):
             inputs,
             num_outputs, [1, 1],
             stride=1,
-            data_format='NCHW',
+            data_format='NHWC',
             scope='1x1')
         e3x3 = conv2d(
-            inputs, num_outputs, [3, 3], data_format='NCHW', scope='3x3')
-    ret = tf.concat([e1x1, e3x3], 1)
+            inputs, num_outputs, [3, 3], data_format='NHWC', scope='3x3')
+    ret = tf.concat([e1x1, e3x3], 3)
     return ret
 
 
@@ -69,67 +69,68 @@ class Squeezenet_CIFAR(object):
 
     @staticmethod
     def _squeezenet(images, num_classes=10):
-        # Input shape N x 3 x 32 x 32
+        # Input shape N x 32 x 32 x 3
         print('images', images)
 
-        # N x 64 x 32 x 32
+        # N x 32 x 32 x 64
         net = conv2d(
             images,
             num_outputs=64,
             kernel_size=[2, 2],
             stride=1,
-            data_format='NCHW',
+            data_format='NHWC',
             scope='conv1')
         print('conv1', net)
 
-        # N x 64 x 16 x 16
-        net = max_pool2d(net, [2, 2], data_format='NCHW', scope='maxpool1')
+        # N x 16 x 16 x 64
+        net = max_pool2d(net, [2, 2], data_format='NHWC', scope='maxpool1')
         print('maxpool1', net)
 
-        # N x 128 x 16 x 16
+        # N x 16 x 16 x 128
         net = fire_module(net, 16, 64, scope='fire2')
         print('fire2', net)
 
-        # N x 128 x 16 x 16
+        # N x 16 x 16 x 128
         net = fire_module(net, 16, 64, scope='fire3')
         print('fire3', net)
 
         #net = fire_module(net, 32, 128, scope='fire4')
         #print('fire4', net)
 
-        # N x 128 x 8 x 8
-        net = max_pool2d(net, [2, 2], data_format='NCHW', scope='maxpool4')
+        # N x 8 x 8 x 128
+        net = max_pool2d(net, [2, 2], data_format='NHWC', scope='maxpool4')
         print('maxpool4', net)
 
-        # N x 256 x 8 x 8
+        # N x 8 x 8 x 256
         net = fire_module(net, 32, 128, scope='fire5')
         print('fire5', net)
 
-        # N x 256 x 8 x 8
-        net = fire_module(net, 32, 128, scope='fire6')
+        # N x 8 x 8 x 256
+        net = fire_module(net, 48, 192, scope='fire6')
         print('fire6', net)
+
         #net = fire_module(net, 48, 192, scope='fire7')
         #print('fire7', net)
         #net = fire_module(net, 64, 256, scope='fire8')
-        #net = max_pool2d(net, [2, 2], data_format='NCHW', scope='maxpool8')
+        #net = max_pool2d(net, [2, 2], data_format='NHWC', scope='maxpool8')
         #net = fire_module(net, 64, 256, scope='fire9')
-        #net = avg_pool2d(net, [4, 4], data_format='NCHW', scope='avgpool10')
+        #net = avg_pool2d(net, [4, 4], data_format='NHWC', scope='avgpool10')
 
-        # N x 10 x 8 x 8
+        # N x 8 x 8 x 10
         net = conv2d(
             net,
             num_classes, [1, 1],
             activation_fn=None,
             normalizer_fn=None,
-            data_format='NCHW',
+            data_format='NHWC',
             scope='conv10')
         print('conv10', net)
 
-        # N x 10 x 1 x 1
-        net = max_pool2d(net, [8, 8], data_format='NCHW', scope='maxpool7')
+        # N x 1 x 1 x 10
+        net = max_pool2d(net, [8, 8], data_format='NHWC', scope='maxpool7')
         print('maxpool7', net)
         # N x 10
-        logits = tf.squeeze(net, [2, 3], name='logits')
+        logits = tf.squeeze(net, [1, 2], name='logits')
         print('logits', logits)
         return logits
 
@@ -144,5 +145,5 @@ def _arg_scope(is_training, weight_decay, bn_decay):
                        'decay': bn_decay
                    }):
         with arg_scope([conv2d, avg_pool2d, max_pool2d, batch_norm],
-                       data_format='NCHW') as sc:
+                       data_format='NHWC') as sc:
             return sc
