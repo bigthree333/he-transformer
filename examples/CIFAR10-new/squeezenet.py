@@ -31,10 +31,10 @@ def fire_module(x,
                 expand3_depth,
                 reuse=None,
                 scope=None):
-    x = Conv2D(32, (1, 1), padding="valid")(x)
+    x = Conv2D(32, (1, 1), padding="same")(x)
     x = Activation('relu')(x)
 
-    left = Conv2D(expand1_depth, (1, 1), padding='valid')(x)
+    left = Conv2D(expand1_depth, (1, 1), padding='same')(x)
     left = Activation('relu')(left)
 
     right = ZeroPadding2D(padding=(1, 1))(x)
@@ -46,8 +46,7 @@ def fire_module(x,
 
 
 def Squeezenet(num_classes=10):
-
-    # Squeezenet 1
+    # Simple Model ~77% accruacy
     input_img = Input(shape=(32, 32, 3))
     x = Conv2D(32, kernel_size=(3, 3), activation='relu')(input_img)
     x = Conv2D(64, (3, 3), activation='relu')(x)
@@ -61,21 +60,12 @@ def Squeezenet(num_classes=10):
     model = Model(input=input_img, output=[x])
     return model
 
-    # Squeueze1 from https://github.com/kaizouman/tensorsandbox/tree/master/cifar10/models/squeeze
+    # Squeeze1 from https://github.com/kaizouman/tensorsandbox/tree/master/cifar10/models/squeeze
     input_img = Input(shape=(32, 32, 3))
-
-    print('input_img', input_img)
     x = Conv2D(
-        64,
-        (3, 3),
-        padding="same",
-        activation='relu',
-    )(input_img)
+        64, kernel_size=(3, 3), activation='relu', padding='same')(input_img)
     print(x)
-
     x = MaxPooling2D(pool_size=(2, 2))(x)
-
-    x = Dense(x)
 
     print(x)
     x = fire_module(x, 32, 64, 64)
@@ -94,7 +84,8 @@ def Squeezenet(num_classes=10):
 
     # Final conv to get ten classes
     # N x 8 x 8 x 10
-    x = Conv2D(num_classes, (1, 1), padding='valid', activation='relu')(x)
+    x = Conv2D(
+        num_classes, kernel_size=(1, 1), padding='same', activation='relu')(x)
     print(x)
 
     # x = N x 1 x 1 x 10
@@ -102,8 +93,8 @@ def Squeezenet(num_classes=10):
     x = AveragePooling2D(pool_size=(8, 8))(x)
     print(x)
 
-    x = Flatten()(x)
-    print(x)
+    y = Flatten()(x)
+    print(y)
 
-    model = Model(input=input_img, output=[x])
+    model = Model(input=input_img, output=[y])
     return model

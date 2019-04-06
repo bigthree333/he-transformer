@@ -41,7 +41,7 @@ FLAGS = None
 def main():
     # Import data
     num_classes = 10
-    epochs = 100
+    epochs = 1
     NUM_TRAIN_SAMPLES = 50000
     IMAGE_HEIGHT = IMAGE_WIDTH = 32
     CHANNELS = 3
@@ -85,12 +85,20 @@ def main():
     model.summary()
 
     model.fit(
-    x_train,
-    y_train,
-    batch_size=batch_size,
-    epochs=epochs,
-    verbose=1,
-    validation_data=(x_test, y_test)
+        x_train,
+        y_train,
+        batch_size=FLAGS.batch_size,
+        epochs=epochs,
+        verbose=1,
+        validation_data=(x_test, y_test))
+
+    # serialize model to JSON
+    model_json = model.to_json()
+    with open("model.json", "w") as json_file:
+        json_file.write(model_json)
+    # serialize weights to HDF5
+    model.save_weights("model.h5")
+    print("Saved model to disk")
 
 
 if __name__ == '__main__':
