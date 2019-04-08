@@ -40,7 +40,7 @@ x_train = x_train.astype('float32')
 x_test = x_test.astype('float32')
 x_train /= 255
 x_test /= 255
-if False:
+if True:
     # load json and create model
     json_file = open('model.json', 'r')
     loaded_model_json = json_file.read()

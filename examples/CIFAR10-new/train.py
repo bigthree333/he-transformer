@@ -41,7 +41,6 @@ FLAGS = None
 def main():
     # Import data
     num_classes = 10
-    epochs = 1
     NUM_TRAIN_SAMPLES = 50000
     IMAGE_HEIGHT = IMAGE_WIDTH = 32
     CHANNELS = 3
@@ -88,7 +87,7 @@ def main():
         x_train,
         y_train,
         batch_size=FLAGS.batch_size,
-        epochs=epochs,
+        epochs=FLAGS.epochs,
         verbose=1,
         validation_data=(x_test, y_test))
 
@@ -104,10 +103,7 @@ def main():
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument(
-        '--train_loop_count',
-        type=int,
-        default=20000,
-        help='Number of training iterations')
+        '--epochs', type=int, default=1, help='Number of training iterations')
     parser.add_argument(
         '--batch_size', type=int, default=50, help='Batch Size')
     parser.add_argument(
