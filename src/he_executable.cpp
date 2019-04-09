@@ -321,7 +321,6 @@ void runtime::he::HEExecutable::handle_message(
 
     size_t element_count = message.count();
     size_t element_size = message.element_size();
-    m_relu_ciphertexts.clear();
 
     NGRAPH_INFO << "Got " << element_count << " ciphertexts";
     NGRAPH_INFO << "element_size " << element_size;
@@ -679,10 +678,12 @@ bool runtime::he::HEExecutable::call(
     size_t cipher_size = cipher_str.size();
     m_result_message = TCPMessage(MessageType::result, output_shape_size,
                                   cipher_size, cipher_cstr);
-    std::cout << "Writing Result message with " << output_shape_size
-              << " ciphertexts " << std::endl;
+    NGRAPH_INFO << "Writing Result message with " << output_shape_size
+                << " ciphertexts ";
     m_session->do_write(m_result_message);
   }
+
+  NGRAPH_INFO << "Server total bytes written " << m_session->bytes_written();
 
   return true;
 }
@@ -1231,6 +1232,7 @@ void runtime::he::HEExecutable::generate_calls(
             "Relu op unsupported unless client is enabled. Try setting "
             "NGRAPH_ENABLE_CLIENT=1");
       }
+      m_relu_ciphertexts.clear();
 
       size_t element_count =
           shape_size(node.get_output_shape(0)) / m_batch_size;
@@ -1240,36 +1242,36 @@ void runtime::he::HEExecutable::generate_calls(
         throw ngraph_error("Relu types not supported.");
       }
 
-      stringstream cipher_stream;
       size_t cipher_count = 0;
       for (const auto& he_ciphertext : arg0_cipher->get_elements()) {
+        stringstream cipher_stream;
         auto wrapper =
             dynamic_pointer_cast<runtime::he::he_seal::SealCiphertextWrapper>(
                 he_ciphertext);
         seal::Ciphertext c = wrapper->m_ciphertext;
         c.save(cipher_stream);
         cipher_count++;
+
+        // Send output to client
+        NGRAPH_INFO << "Sending " << element_count << " Relu ciphertexts (size "
+                    << cipher_stream.str().size() << ") to client";
+        auto relu_message =
+            TCPMessage(MessageType::relu_request, 1, cipher_stream);
+
+        m_session->do_write(relu_message);
+
+        // Acquire lock
+        unique_lock<mutex> mlock(m_relu_mutex);
+
+        // Wait until Relu is done
+        m_relu_cond.wait(mlock, std::bind(&HEExecutable::relu_done, this));
+        NGRAPH_INFO << "Relu is done";
+        // Reset for next Relu call
+        m_relu_done = false;
       }
       NGRAPH_ASSERT(element_count == cipher_count)
           << "Incorrect number of elements in ciphertext";
 
-      // Send output to client
-      NGRAPH_INFO << "Sending " << element_count << " Relu ciphertexts (size "
-                  << cipher_stream.str().size() << ") to client";
-      auto relu_message =
-          TCPMessage(MessageType::relu_request, element_count, cipher_stream);
-
-      m_session->do_write(relu_message);
-
-      // Acquire lock
-      unique_lock<mutex> mlock(m_relu_mutex);
-
-      // Wait until Relu is done
-      m_relu_cond.wait(mlock, std::bind(&HEExecutable::relu_done, this));
-      NGRAPH_INFO << "Relu is done";
-
-      // Reset for next Relu call
-      m_relu_done = false;
       out0_cipher->set_elements(m_relu_ciphertexts);
       break;
     }

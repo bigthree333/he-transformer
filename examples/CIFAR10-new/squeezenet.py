@@ -47,7 +47,7 @@ def fire_module(x,
 
 def Squeezenet(num_classes=10):
     # Simple Model ~71% accruacy
-    '''input_img = Input(shape=(32, 32, 3))
+    input_img = Input(shape=(32, 32, 3))
     x = Conv2D(32, kernel_size=(3, 3), activation='relu')(input_img)
     x = Conv2D(64, (3, 3), activation='relu')(x)
     x = MaxPooling2D(pool_size=(2, 2))(x)
@@ -58,7 +58,7 @@ def Squeezenet(num_classes=10):
     x = Dense(num_classes, activation='softmax')(x)
 
     model = Model(input=input_img, output=[x])
-    return model'''
+    return model
 
     # Squeeze1 from https://github.com/kaizouman/tensorsandbox/tree/master/cifar10/models/squeeze
     input_img = Input(shape=(32, 32, 3))

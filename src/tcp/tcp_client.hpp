@@ -36,7 +36,8 @@ class TCPClient {
   TCPClient(boost::asio::io_context& io_context,
             const tcp::resolver::results_type& endpoints,
             std::function<void(const runtime::he::TCPMessage&)> message_handler)
-      : m_io_context(io_context),
+      : m_bytes_written(0),
+        m_io_context(io_context),
         m_socket(io_context),
         m_message_callback(std::bind(message_handler, std::placeholders::_1)) {
     std::cout << "Client starting async connection" << std::endl;
@@ -47,6 +48,8 @@ class TCPClient {
     std::cout << "Closing socket" << std::endl;
     m_socket.shutdown(boost::asio::ip::tcp::socket::shutdown_both);
     boost::asio::post(m_io_context, [this]() { m_socket.close(); });
+
+    std::cout << "Client total bytes written " << m_bytes_written << std::endl;
   }
 
   void write_message(const runtime::he::TCPMessage& message) {
@@ -111,6 +114,9 @@ class TCPClient {
   }
 
   void do_write() {
+    std::cout << "Client writing message size "
+              << m_message_queue.front().num_bytes() << std::endl;
+    m_bytes_written += m_message_queue.front().num_bytes();
     boost::asio::async_write(
         m_socket,
         boost::asio::buffer(m_message_queue.front().header_ptr(),
@@ -130,6 +136,8 @@ class TCPClient {
           }
         });
   }
+
+  size_t m_bytes_written;
 
   boost::asio::io_context& m_io_context;
   TCPMessage m_read_message;

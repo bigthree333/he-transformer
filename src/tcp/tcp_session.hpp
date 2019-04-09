@@ -30,7 +30,8 @@ class TCPSession : public std::enable_shared_from_this<TCPSession> {
   TCPSession(
       tcp::socket socket,
       std::function<void(const runtime::he::TCPMessage&)> message_handler)
-      : m_socket(std::move(socket)),
+      : m_bytes_written(0),
+        m_socket(std::move(socket)),
         m_message_callback(std::bind(message_handler, std::placeholders::_1)) {}
 
   void start() { do_read_header(); }
@@ -78,6 +79,9 @@ class TCPSession : public std::enable_shared_from_this<TCPSession> {
 
   void do_write(const TCPMessage& message) {
     auto self(shared_from_this());
+    std::cout << "Server writing message size " << message.num_bytes()
+              << std::endl;
+    m_bytes_written += message.num_bytes();
     boost::asio::async_write(
         m_socket,
         boost::asio::buffer(message.header_ptr(), message.num_bytes()),
@@ -89,6 +93,9 @@ class TCPSession : public std::enable_shared_from_this<TCPSession> {
         });
   }
 
+  size_t bytes_written() { return m_bytes_written; }
+
+  size_t m_bytes_written;
   TCPMessage m_message;
   tcp::socket m_socket;
 

@@ -23,6 +23,11 @@ b = tf.placeholder(tf.float32, shape=(2, 2))
 c = tf.placeholder(tf.float32, shape=())
 f = (a + b) * c
 
+print(ngraph_bridge.list_backends())
+
+ngraph_bridge.set_backend('HE_SEAL_CKKS')
+print(ngraph_bridge.get_currently_set_backend_name())
+
 with tf.Session() as sess:
     f_val = sess.run(f, feed_dict={b: np.ones((2, 2)), c: np.array(5, )})
     print("Result: ", f_val)

@@ -18,6 +18,11 @@ import ngraph_bridge
 import numpy as np
 import tensorflow as tf
 
+print(ngraph_bridge.list_backends())
+
+ngraph_bridge.set_backend('HE_SEAL_CKKS')
+print(ngraph_bridge.get_currently_set_backend_name())
+
 a = tf.constant(np.array([[1, 2], [3, 4]]), dtype=np.float32)
 b = tf.placeholder(tf.float32, shape=(2, 2))
 f = (a + b) * a * b

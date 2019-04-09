@@ -17,7 +17,7 @@ def test_mnist_cnn(FLAGS):
     # x_test_batch = mnist.test.images[:batch_size]
     y_test_batch = mnist.test.labels[:batch_size]
 
-    x_test_batch = np.random.random([1, 32, 32, 3])
+    x_test_batch = np.random.random([FLAGS.batch_size, 32, 32, 3])
 
     print('x_test_batch', x_test_batch.shape)
     print('x_test_batch', x_test_batch)

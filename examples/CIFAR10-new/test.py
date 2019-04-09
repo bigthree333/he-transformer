@@ -52,9 +52,10 @@ if True:
 
     model = loaded_model
 
-    print(model.outputs)
+    #print(model.outputs)
     # [<tf.Tensor 'dense_2/Softmax:0' shape=(?, 10) dtype=float32>]
-    print(model.inputs)
+    #print(model.inputs)
+
 
     def freeze_session(session,
                        keep_var_names=None,
