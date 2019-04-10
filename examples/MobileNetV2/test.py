@@ -69,43 +69,46 @@ def optimize_for_inference():
 
     os.system('''python -m tensorflow.python.tools.optimize_for_inference \
         --input model/frozen_model.pb \
+        --input_names input_1 \
+        --frozen_graph=True \
+        --output_names Logits/Softmax \
         --output model/optimized_model.pb''')
     print('optimized for inference')
 
 
 def main():
-    if False:
+    if not os.path.isfile('./model/optimized_model.pb'):
+        print('Optimizing for inference')
         optimize_for_inference()
-        tf.keras.backend.clear_session()
 
-        f = gfile.FastGFile("./model/optimized_model.pb", 'rb')
-        graph_def = tf.GraphDef()
-        graph_def.ParseFromString(f.read())
-        f.close()
-        sess = tf.Session()
-        tf.global_variables_initializer().run(session=sess)
-        sess.graph.as_default()
-        tf.import_graph_def(graph_def)
+    tf.keras.backend.clear_session()
 
-        nodes = [n.name for n in tf.get_default_graph().as_graph_def().node]
-        #print('nodes', nodes)
+    f = gfile.FastGFile("./model/optimized_model.pb", 'rb')
+    graph_def = tf.GraphDef()
+    graph_def.ParseFromString(f.read())
+    f.close()
+    sess = tf.Session()
+    tf.global_variables_initializer().run(session=sess)
+    sess.graph.as_default()
+    tf.import_graph_def(graph_def)
 
-        x_test = np.random.random([FLAGS.batch_size, 224, 224, 3])
-        x_test = preprocess_input(x_test)
+    nodes = [n.name for n in tf.get_default_graph().as_graph_def().node]
+    print('nodes', nodes)
 
-        output_tensor = sess.graph.get_tensor_by_name(
-            'import/Logits/Softmax:0')
-        input_tensor = sess.graph.get_tensor_by_name('import/input_1:0')
-        print('input_tensor', input_tensor)
-        print('output tensor', output_tensor.shape)
+    x_test = np.random.random([FLAGS.batch_size, 224, 224, 3])
+    x_test = preprocess_input(x_test)
 
-        preds = sess.run(output_tensor,
-                         {input_tensor: x_test[:FLAGS.batch_size]})
-        preds = np.argmax(preds, axis=1)
+    output_tensor = sess.graph.get_tensor_by_name('import/Logits/Softmax:0')
+    input_tensor = sess.graph.get_tensor_by_name('import/input_1:0')
+    print('input_tensor', input_tensor)
+    print('output tensor', output_tensor.shape)
 
-        print('preds', preds)
+    preds = sess.run(output_tensor, {input_tensor: x_test[:FLAGS.batch_size]})
+    preds = np.argmax(preds, axis=1)
 
-        exit(1)
+    print('preds', preds)
+
+    exit(1)
 
     # Original MobileNetV2 Keras model
     x = np.random.random([FLAGS.batch_size, 224, 224, 3])
@@ -115,8 +118,6 @@ def main():
     model.summary()
 
     preds = model.predict(x)
-
-    print('pred', decode_predictions(preds, top=3)[0])
 
     # decode the results into a list of tuples (class, description, probability)
     # (one such list for each sample in the batch)
