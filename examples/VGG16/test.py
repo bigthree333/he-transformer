@@ -9,9 +9,8 @@ import ngraph_bridge
 keras.backend.set_image_data_format('channels_last')
 
 from keras.callbacks import ModelCheckpoint
-from keras.datasets import cifar10
 
-from keras.applications.mobilenetv2 import MobileNetV2, preprocess_input, decode_predictions
+from keras.applications.vgg16 import VGG16, preprocess_input, decode_predictions
 
 FLAGS = None
 
@@ -19,12 +18,11 @@ import tensorflow as tf
 from tensorflow.python.platform import gfile
 from tensorflow.python.framework import graph_io
 from tensorflow.keras.models import load_model
-import tensorflow.contrib.slim as slim
 
 
 def optimize_for_inference():
     K.set_learning_phase(0)
-    model = MobileNetV2()
+    model = VGG16()
     K.set_learning_phase(0)
     model_file = './model/model.h5'
     model.save(model_file)
@@ -71,58 +69,62 @@ def optimize_for_inference():
     os.system('''python -m tensorflow.python.tools.optimize_for_inference \
         --input model/frozen_model.pb \
         --input_names input_1 \
-        --frozen_graph=True \
-        --output_names Logits/Softmax \
+        --output_names predictions/Softmax \
         --output model/optimized_model.pb''')
     print('optimized for inference')
 
 
 def main():
-    if not os.path.isfile('./model/optimized_model.pb'):
-        print('Optimizing for inference')
+    if True:
         optimize_for_inference()
+        tf.keras.backend.clear_session()
 
-    tf.keras.backend.clear_session()
-    f = gfile.FastGFile("./model/optimized_model.pb", 'rb')
-    graph_def = tf.GraphDef()
-    graph_def.ParseFromString(f.read())
-    f.close()
-    sess = tf.Session()
-    tf.global_variables_initializer().run(session=sess)
-    sess.graph.as_default()
-    tf.import_graph_def(graph_def)
+        f = gfile.FastGFile("./model/frozen_model.pb", 'rb')
+        graph_def = tf.GraphDef()
+        graph_def.ParseFromString(f.read())
+        f.close()
+        sess = tf.Session()
+        tf.global_variables_initializer().run(session=sess)
+        sess.graph.as_default()
+        tf.import_graph_def(graph_def)
 
-    nodes = [n.name for n in tf.get_default_graph().as_graph_def().node]
-    print('nodes', nodes)
+        nodes = [n.name for n in tf.get_default_graph().as_graph_def().node]
+        print('nodes', nodes)
 
-    model_vars = tf.trainable_variables()
-    slim.model_analyzer.analyze_vars(model_vars, print_info=True)
+        x_test = np.random.random([FLAGS.batch_size, 224, 224, 3])
+        x_test = preprocess_input(x_test)
 
-    exit(1)
+        output_tensor = sess.graph.get_tensor_by_name(
+            'import/predictions/Softmax:0')
+        input_tensor = sess.graph.get_tensor_by_name('import/input_1:0')
+        print('input_tensor', input_tensor)
+        print('output tensor', output_tensor.shape)
 
-    x_test = np.random.random([FLAGS.batch_size, 224, 224, 3])
-    x_test = preprocess_input(x_test)
+        preds = sess.run(output_tensor,
+                         {input_tensor: x_test[:FLAGS.batch_size]})
+        preds = np.argmax(preds, axis=1)
 
-    output_tensor = sess.graph.get_tensor_by_name('import/Logits/Softmax:0')
-    input_tensor = sess.graph.get_tensor_by_name('import/input_1:0')
-    print('input_tensor', input_tensor)
-    print('output tensor', output_tensor.shape)
+        print('preds', preds)
 
-    preds = sess.run(output_tensor, {input_tensor: x_test[:FLAGS.batch_size]})
-    preds = np.argmax(preds, axis=1)
+        exit(1)
 
-    print('preds', preds)
-
-    exit(1)
-
-    # Original MobileNetV2 Keras model
+    # Original VGG16 Keras model
     x = np.random.random([FLAGS.batch_size, 224, 224, 3])
     x = preprocess_input(x)
     K.set_learning_phase(0)
-    model = MobileNetV2()
+    model = VGG16()
     model.summary()
+    test = [print(n.name) for n in tf.get_default_graph().as_graph_def().node]
+
+    session = keras.backend.get_session()
+    min_graph = tf.graph_util.convert_variables_to_constants(
+        session, session.graph_def, [node.op.name for node in model.outputs])
+
+    tf.train.write_graph(min_graph, "./model/", "model.pbtxt", as_text=True)
 
     preds = model.predict(x)
+
+    print('pred', decode_predictions(preds, top=3)[0])
 
     # decode the results into a list of tuples (class, description, probability)
     # (one such list for each sample in the batch)

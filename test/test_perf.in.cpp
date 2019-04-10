@@ -112,5 +112,8 @@ NGRAPH_TEST(${BACKEND_NAME}, nbench_file) {
   auto backend = runtime::Backend::create("${BACKEND_NAME}");
   auto he_backend = static_cast<runtime::he::HEBackend*>(backend.get());
 
-  nbench_summary_perf(he_backend, "../examples/MobileNetV2/nbench_summary.txt");
+  ifstream in("../examples/MobileNetV2/tf_function_ngraph_cluster_0.json");
+  shared_ptr<Function> func = deserialize(in);
+
+  nbench_summary_perf(he_backend, func);
 }
