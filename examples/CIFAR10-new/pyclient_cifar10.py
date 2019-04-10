@@ -2,31 +2,40 @@ import time
 import argparse
 import numpy as np
 import sys
-
 np.set_printoptions(threshold=sys.maxsize)
 
-from tensorflow.examples.tutorials.mnist import input_data
+import keras
+from keras.models import model_from_json
+from keras import backend as K
+# CPU needs NHWC format for MaxPool / FusedBatchNorm
+keras.backend.set_image_data_format('channels_last')
+from keras.callbacks import ModelCheckpoint
+from keras.datasets import cifar10
+
 import he_seal_client
 
 FLAGS = None
 
 
-def test_mnist_cnn(FLAGS):
-    mnist = input_data.read_data_sets(FLAGS.data_dir, one_hot=True)
+def test_cifar10():
+    (x_train, y_train), (x_test, y_test) = cifar10.load_data()
+
+    print(x_test.shape)
+
     batch_size = FLAGS.batch_size
     # x_test_batch = mnist.test.images[:batch_size]
-    y_test_batch = mnist.test.labels[:batch_size]
 
-    x_test_batch = np.random.random([FLAGS.batch_size, 32, 32, 3])
+    x_test_batch = x_test[:FLAGS.batch_size]
+    y_test_batch = x_test[:FLAGS.batch_size]
 
     print('x_test_batch', x_test_batch.shape)
-    print('x_test_batch', x_test_batch)
+    #print('x_test_batch', x_test_batch)
 
     data = x_test_batch.flatten('F')
 
-    hostname = 'localhost'
     port = 34000
-    client = he_seal_client.HESealClient(hostname, port, batch_size, data)
+    client = he_seal_client.HESealClient(FLAGS.hostname, port, batch_size,
+                                         data)
 
     print('Sleeping until client is done')
     while not client.is_done():
@@ -48,12 +57,11 @@ def test_mnist_cnn(FLAGS):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument(
-        '--data_dir',
+        '--batch_size', type=int, default=50, help='Batch Size')
+    parser.add_argument(
+        '--hostname',
         type=str,
-        default='/tmp/tensorflow/mnist/input_data',
-        help='Directory where input data is stored')
-    parser.add_argument('--batch_size', type=int, default=1, help='Batch size')
-
+        default='localhost',
+        help='Host where server is')
     FLAGS, unparsed = parser.parse_known_args()
-
-    test_mnist_cnn(FLAGS)
+    test_cifar10()

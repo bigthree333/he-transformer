@@ -10,7 +10,7 @@ import keras
 from keras.models import Model, model_from_json
 from keras.layers import Input, Concatenate, AveragePooling2D
 from keras.models import Sequential
-from keras.layers import Dense, Dropout, Activation, Flatten
+from keras.layers import Dense, Dropout, Activation, Flatten, Reshape
 from keras.layers import Conv2D, MaxPooling2D, ZeroPadding2D
 from keras.regularizers import l2
 '''def get_variable(name, shape, mode):
@@ -25,37 +25,16 @@ from keras.regularizers import l2
             np.loadtxt(name + '.txt', dtype=np.float32).reshape(shape))'''
 
 
-def fire_module(x,
-                squeeze_depth,
-                expand1_depth,
-                expand3_depth,
-                reuse=None,
-                scope=None):
-    x = Conv2D(32, (1, 1), padding="same")(x)
-    x = Activation('relu')(x)
-
-    left = Conv2D(expand1_depth, (1, 1), padding='same')(x)
-    left = Activation('relu')(left)
-
-    right = ZeroPadding2D(padding=(1, 1))(x)
-    right = Conv2D(expand3_depth, (3, 3), padding='valid')(right)
-    right = Activation('relu')(right)
-
-    x = keras.layers.concatenate([left, right])
-    return x
-
-
 def Squeezenet(num_classes=10):
     # Simple Model ~71% accruacy
-    input_img = Input(shape=(32, 32, 3))
+    input_img = Input(shape=(32, 32, 3), name='input')
     x = Conv2D(32, kernel_size=(3, 3), activation='relu')(input_img)
     x = Conv2D(64, (3, 3), activation='relu')(x)
     x = MaxPooling2D(pool_size=(2, 2))(x)
-    x = Dropout(0.25)(x)
-    x = Flatten()(x)
+    x = Reshape((12544, ), input_shape=(-1, 14, 14, 64))(x)
     x = Dense(128, activation='relu')(x)
-    x = Dropout(0.5)(x)
-    x = Dense(num_classes, activation='softmax')(x)
+    # Leave softmax to loss function
+    x = Dense(num_classes, name='output')(x)
 
     model = Model(input=input_img, output=[x])
     return model
@@ -98,3 +77,23 @@ def Squeezenet(num_classes=10):
 
     model = Model(input=input_img, output=[y])
     return model
+
+
+def fire_module(x,
+                squeeze_depth,
+                expand1_depth,
+                expand3_depth,
+                reuse=None,
+                scope=None):
+    x = Conv2D(32, (1, 1), padding="same")(x)
+    x = Activation('relu')(x)
+
+    left = Conv2D(expand1_depth, (1, 1), padding='same')(x)
+    left = Activation('relu')(left)
+
+    right = ZeroPadding2D(padding=(1, 1))(x)
+    right = Conv2D(expand3_depth, (3, 3), padding='valid')(right)
+    right = Activation('relu')(right)
+
+    x = keras.layers.concatenate([left, right])
+    return x
