@@ -15,20 +15,10 @@ from keras.applications.mobilenetv2 import MobileNetV2, preprocess_input, decode
 
 FLAGS = None
 
-from keras.applications.resnet50 import ResNet50
-from keras.preprocessing import image
-from keras.applications.resnet50 import preprocess_input, decode_predictions
-
 import tensorflow as tf
 from tensorflow.python.platform import gfile
 from tensorflow.python.framework import graph_io
 from tensorflow.keras.models import load_model
-
-#def optimize_for_inference():
-#    os.system('''python -m tensorflow.python.tools.optimize_for_inference \
-#        --input model/tf_model.pb \
-#        --output model/tf_optimized_model.pb''')
-#    print('optimized for inference')
 
 
 def optimize_for_inference():
@@ -51,7 +41,7 @@ def optimize_for_inference():
                      save_pb_name='frozen_model.pb',
                      save_pb_as_text=False):
         with graph.as_default():
-            graphdef_inf = tf.graph_util.remove_training_nodes(
+            graphdef_inf = tf.compat.v1.graph_util.remove_training_nodes(
                 graph.as_graph_def())
             graphdef_frozen = tf.graph_util.convert_variables_to_constants(
                 session, graphdef_inf, output)
@@ -77,22 +67,50 @@ def optimize_for_inference():
         session, [out.op.name for out in model.outputs],
         save_pb_dir=save_pb_dir)
 
+    os.system('''python -m tensorflow.python.tools.optimize_for_inference \
+        --input model/frozen_model.pb \
+        --output model/optimized_model.pb''')
+    print('optimized for inference')
+
 
 def main():
-    #optimize_for_inference()
+    if False:
+        optimize_for_inference()
+        tf.keras.backend.clear_session()
 
-    img = np.random.random([FLAGS.batch_size, 224, 224, 3])
+        f = gfile.FastGFile("./model/optimized_model.pb", 'rb')
+        graph_def = tf.GraphDef()
+        graph_def.ParseFromString(f.read())
+        f.close()
+        sess = tf.Session()
+        tf.global_variables_initializer().run(session=sess)
+        sess.graph.as_default()
+        tf.import_graph_def(graph_def)
 
-    # model = ResNet50(weights='imagenet')
-    #img_path = 'elephant.jpg'
-    #img = image.load_img(img_path, target_size=(224, 224))
-    #x = image.img_to_array(img)
-    #x = np.expand_dims(x, axis=0)
-    x = img
+        nodes = [n.name for n in tf.get_default_graph().as_graph_def().node]
+        #print('nodes', nodes)
+
+        x_test = np.random.random([FLAGS.batch_size, 224, 224, 3])
+        x_test = preprocess_input(x_test)
+
+        output_tensor = sess.graph.get_tensor_by_name(
+            'import/Logits/Softmax:0')
+        input_tensor = sess.graph.get_tensor_by_name('import/input_1:0')
+        print('input_tensor', input_tensor)
+        print('output tensor', output_tensor.shape)
+
+        preds = sess.run(output_tensor,
+                         {input_tensor: x_test[:FLAGS.batch_size]})
+        preds = np.argmax(preds, axis=1)
+
+        print('preds', preds)
+
+        exit(1)
+
+    # Original MobileNetV2 Keras model
+    x = np.random.random([FLAGS.batch_size, 224, 224, 3])
     x = preprocess_input(x)
-
     K.set_learning_phase(0)
-
     model = MobileNetV2()
     model.summary()
 

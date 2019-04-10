@@ -36,7 +36,7 @@ std::vector<std::vector<size_t>> max_pool(
   CoordinateTransform output_transform(out_shape);
 
   size_t out_size = 0;
-  for (const Coordinate& : output_transform) {
+  for (const Coordinate& out_coord : output_transform) {
     out_size++;
   }
   NGRAPH_ASSERT(out_size == shape_size(out_shape))

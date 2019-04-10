@@ -14,6 +14,7 @@
 // limitations under the License.
 //*****************************************************************************
 
+#include <fstream>
 #include "he_backend.hpp"
 #include "ngraph/ngraph.hpp"
 #include "test_util.hpp"
@@ -105,4 +106,11 @@ NGRAPH_TEST(${BACKEND_NAME}, perf_square) {
     auto handle = backend->compile(f);
     handle->call({t_result}, {t_a, t_b});
   }
+}
+
+NGRAPH_TEST(${BACKEND_NAME}, nbench_file) {
+  auto backend = runtime::Backend::create("${BACKEND_NAME}");
+  auto he_backend = static_cast<runtime::he::HEBackend*>(backend.get());
+
+  nbench_summary_perf(he_backend, "../examples/MobileNetV2/nbench_summary.txt");
 }

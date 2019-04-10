@@ -1,0 +1,225 @@
+Dot{2, 1000}: 1 ops
+Divide{2, 1280}: 1 ops
+Sum{2, 1280}: 1 ops
+Reshape{2, 7, 7, 1280}: 1 ops
+Convolution{2, 1280, 7, 7}: 1 ops
+Reshape{2, 320, 7, 7}: 1 ops
+Slice{2, 1, 7, 7}: 2880 ops
+Relu{2, 7, 7, 1280}: 1 ops
+Reshape{2, 960, 7, 7}: 9 ops
+Reshape{2, 7, 7, 320}: 1 ops
+Minimum{2, 7, 7, 960}: 6 ops
+Relu{2, 7, 7, 960}: 6 ops
+BatchNormInference{2, 960, 7, 7}: 6 ops
+BatchNormInference{2, 160, 7, 7}: 3 ops
+Convolution{2, 160, 7, 7}: 3 ops
+BatchNormInference{2, 1280, 7, 7}: 1 ops
+Slice{2, 1, 15, 15}: 576 ops
+Reshape{2, 576, 15, 15}: 1 ops
+Pad{2, 15, 15, 576}: 1 ops
+Add{2, 14, 14, 96}: 2 ops
+Add{2, 1000}: 1 ops
+Concat{2, 576, 14, 14}: 2 ops
+Reshape{2, 576, 14, 14}: 6 ops
+Minimum{2, 14, 14, 576}: 5 ops
+Relu{2, 14, 14, 576}: 5 ops
+Reshape{2, 14, 14, 576}: 7 ops
+Result{2, 1000}: 1 ops
+BatchNormInference{2, 576, 14, 14}: 5 ops
+Reshape{2, 96, 14, 14}: 3 ops
+Reshape{2, 14, 14, 96}: 3 ops
+Slice{2, 1, 14, 14}: 2688 ops
+Minimum{2, 14, 14, 384}: 8 ops
+Reshape{2, 384, 14, 14}: 12 ops
+Relu{2, 14, 14, 384}: 8 ops
+BatchNormInference{2, 384, 14, 14}: 8 ops
+Convolution{2, 384, 14, 14}: 4 ops
+Reshape{2, 14, 14, 384}: 12 ops
+Reshape{2, 28, 28, 192}: 7 ops
+BatchNormInference{2, 576, 7, 7}: 1 ops
+Reshape{32, 192, 1, 1}: 2 ops
+Parameter{1280}: 4 ops
+Minimum{2, 28, 28, 192}: 5 ops
+Reshape{64, 384, 1, 1}: 3 ops
+Parameter{144}: 16 ops
+Slice{2, 1, 57, 57}: 144 ops
+Reshape{96, 384, 1, 1}: 1 ops
+Convolution{2, 1, 7, 7}: 3456 ops
+Reshape{2, 3, 225, 225}: 1 ops
+Reshape{192, 32, 1, 1}: 3 ops
+Reshape{576, 96, 1, 1}: 3 ops
+Reshape{2, 7, 7, 160}: 3 ops
+Reshape{2, 7, 7, 576}: 2 ops
+Reshape{1, 960, 3, 3}: 3 ops
+Constant{2, 112, 112, 96}: 1 ops
+BatchNormInference{2, 320, 7, 7}: 1 ops
+BatchNormInference{2, 96, 56, 56}: 1 ops
+Minimum{2, 7, 7, 1280}: 1 ops
+Constant{2, 56, 56, 96}: 1 ops
+Reshape{32, 144, 1, 1}: 1 ops
+Parameter{1, 1, 144, 32}: 1 ops
+Parameter{1, 1, 96, 24}: 1 ops
+Convolution{2, 16, 112, 112}: 1 ops
+Constant{2, 28, 28, 144}: 1 ops
+BatchNormInference{2, 24, 56, 56}: 2 ops
+Parameter{1, 1, 16, 96}: 1 ops
+Convolution{2, 320, 7, 7}: 1 ops
+Constant{2, 14, 14, 576}: 5 ops
+Constant{2, 1280}: 1 ops
+Parameter{3, 3, 3, 32}: 1 ops
+Reshape{2, 28, 28, 144}: 2 ops
+Parameter{16}: 4 ops
+Relu{2, 112, 112, 32}: 2 ops
+Concat{2, 384, 14, 14}: 4 ops
+Reshape{2, 96, 113, 113}: 1 ops
+Reshape{2, 112, 112, 32}: 3 ops
+Constant{2, 7, 7, 960}: 6 ops
+Parameter{1, 1, 384, 96}: 1 ops
+Reshape{1280, 320, 1, 1}: 1 ops
+Minimum{2, 56, 56, 144}: 3 ops
+Parameter{1, 1, 96, 576}: 3 ops
+Convolution{2, 32, 28, 28}: 3 ops
+Pad{2, 113, 113, 96}: 1 ops
+Parameter{1, 1, 960, 160}: 2 ops
+Parameter{2, 224, 224, 3}: 1 ops
+Reshape{1, 576, 3, 3}: 3 ops
+Reshape{1, 192, 3, 3}: 3 ops
+Constant{2, 7, 7, 576}: 1 ops
+Add{2, 14, 14, 64}: 3 ops
+Parameter{1, 1, 160, 960}: 3 ops
+Reshape{384, 64, 1, 1}: 4 ops
+Parameter{384}: 32 ops
+Parameter{576}: 24 ops
+Reshape{2, 192, 28, 28}: 6 ops
+Convolution{2, 1, 14, 14}: 2880 ops
+Parameter{3, 3, 32, 1}: 1 ops
+Add{2, 7, 7, 160}: 2 ops
+Broadcast{2, 1000}: 1 ops
+Parameter{3, 3, 960, 1}: 3 ops
+Concat{2, 96, 56, 56}: 1 ops
+Parameter{1280, 1000}: 1 ops
+Parameter{320}: 4 ops
+Minimum{2, 112, 112, 96}: 1 ops
+Reshape{1, 384, 3, 3}: 4 ops
+Relu{2, 28, 28, 144}: 1 ops
+Reshape{2, 24, 56, 56}: 2 ops
+Parameter{160}: 12 ops
+Parameter{1000}: 1 ops
+Constant{2, 112, 112, 32}: 2 ops
+Convolution{2, 96, 14, 14}: 3 ops
+Parameter{192}: 24 ops
+Reshape{144, 24, 1, 1}: 2 ops
+Convolution{2, 1, 56, 56}: 240 ops
+Parameter{3, 3, 384, 1}: 4 ops
+Parameter{1, 1, 320, 1280}: 1 ops
+Parameter{1, 1, 192, 32}: 2 ops
+Parameter{96}: 20 ops
+Constant{}: 5 ops
+Reshape{2, 32, 28, 28}: 3 ops
+Parameter{1, 1, 576, 96}: 2 ops
+Parameter{3, 3, 96, 1}: 1 ops
+Parameter{1, 1, 24, 144}: 2 ops
+Reshape{2, 7, 7, 960}: 9 ops
+Reshape{2, 144, 28, 28}: 2 ops
+Parameter{1, 1, 64, 384}: 4 ops
+Parameter{64}: 16 ops
+Parameter{1, 1, 384, 64}: 3 ops
+Convolution{2, 1, 28, 28}: 528 ops
+Convolution{2, 64, 14, 14}: 4 ops
+Reshape{96, 576, 1, 1}: 2 ops
+Softmax{2, 1000}: 1 ops
+Reshape{960, 160, 1, 1}: 3 ops
+BatchNormInference{2, 96, 14, 14}: 3 ops
+Parameter{960}: 24 ops
+BatchNormInference{2, 32, 28, 28}: 3 ops
+Reshape{160, 576, 1, 1}: 1 ops
+Add{2, 56, 56, 24}: 1 ops
+Parameter{3, 3, 144, 1}: 2 ops
+Relu{2, 7, 7, 576}: 1 ops
+Parameter{3, 3, 192, 1}: 3 ops
+Parameter{24}: 8 ops
+Reshape{160, 960, 1, 1}: 2 ops
+Constant{2, 7, 7, 1280}: 1 ops
+Parameter{1, 1, 192, 64}: 1 ops
+BatchNormInference{2, 96, 112, 112}: 1 ops
+Parameter{1, 1, 576, 160}: 1 ops
+Parameter{1, 1, 144, 24}: 1 ops
+Reshape{1, 96, 3, 3}: 1 ops
+Parameter{1, 1, 32, 192}: 3 ops
+Minimum{2, 112, 112, 32}: 2 ops
+Parameter{32}: 20 ops
+Reshape{96, 16, 1, 1}: 1 ops
+Reshape{16, 32, 1, 1}: 1 ops
+Convolution{2, 1, 112, 112}: 32 ops
+Reshape{1, 32, 3, 3}: 1 ops
+Reshape{32, 3, 3, 3}: 1 ops
+Reshape{2, 14, 14, 192}: 2 ops
+Reshape{2, 112, 112, 96}: 1 ops
+Pad{2, 225, 225, 3}: 1 ops
+Reshape{2, 576, 7, 7}: 2 ops
+Slice{1, 1, 3, 3}: 7136 ops
+Convolution{2, 576, 14, 14}: 3 ops
+Convolution{2, 32, 112, 112}: 1 ops
+Convolution{2, 960, 7, 7}: 3 ops
+Convolution{2, 24, 56, 56}: 2 ops
+Reshape{320, 960, 1, 1}: 1 ops
+Reshape{2, 144, 57, 57}: 1 ops
+BatchNormInference{2, 32, 112, 112}: 2 ops
+Concat{2, 32, 112, 112}: 1 ops
+Reshape{2, 32, 112, 112}: 3 ops
+Slice{2, 1, 113, 113}: 96 ops
+Relu{2, 56, 56, 96}: 1 ops
+Concat{2, 960, 7, 7}: 3 ops
+BatchNormInference{2, 16, 112, 112}: 1 ops
+Reshape{2, 112, 112, 16}: 1 ops
+Convolution{2, 96, 112, 112}: 1 ops
+Reshape{2, 16, 112, 112}: 1 ops
+Reshape{2, 56, 56, 96}: 2 ops
+Reshape{2, 192, 14, 14}: 2 ops
+Constant{2, 14, 14, 384}: 8 ops
+Reshape{2, 96, 56, 56}: 2 ops
+Reshape{64, 192, 1, 1}: 1 ops
+Minimum{2, 56, 56, 96}: 1 ops
+Parameter{1, 1, 960, 320}: 1 ops
+Relu{2, 28, 28, 192}: 5 ops
+Reshape{24, 144, 1, 1}: 1 ops
+Reshape{2, 56, 56, 24}: 2 ops
+Concat{2, 576, 7, 7}: 1 ops
+Convolution{2, 144, 56, 56}: 2 ops
+Constant{2, 14, 14, 192}: 1 ops
+Parameter{3, 3, 576, 1}: 3 ops
+Add{2, 28, 28, 32}: 2 ops
+Relu{2, 112, 112, 96}: 1 ops
+BatchNormInference{2, 144, 56, 56}: 3 ops
+Reshape{2, 56, 56, 144}: 4 ops
+Reshape{2, 144, 56, 56}: 3 ops
+Slice{2, 1, 56, 56}: 144 ops
+Concat{2, 144, 56, 56}: 1 ops
+Pad{2, 57, 57, 144}: 1 ops
+Concat{2, 144, 28, 28}: 1 ops
+Slice{2, 1, 112, 112}: 32 ops
+BatchNormInference{2, 144, 28, 28}: 1 ops
+Reshape{2, 28, 28, 32}: 3 ops
+Minimum{2, 28, 28, 144}: 1 ops
+Convolution{2, 192, 28, 28}: 3 ops
+Minimum{2, 7, 7, 576}: 1 ops
+Reshape{1, 144, 3, 3}: 2 ops
+Concat{2, 192, 28, 28}: 2 ops
+BatchNormInference{2, 192, 28, 28}: 5 ops
+Constant{2, 28, 28, 192}: 5 ops
+Slice{2, 1, 28, 28}: 384 ops
+Constant{2, 56, 56, 144}: 3 ops
+Pad{2, 29, 29, 192}: 1 ops
+Reshape{2, 192, 29, 29}: 1 ops
+Slice{2, 1, 29, 29}: 192 ops
+Concat{2, 192, 14, 14}: 1 ops
+Reshape{24, 96, 1, 1}: 1 ops
+BatchNormInference{2, 192, 14, 14}: 1 ops
+Relu{2, 14, 14, 192}: 1 ops
+Reshape{2, 160, 7, 7}: 3 ops
+BatchNormInference{2, 64, 14, 14}: 4 ops
+Parameter{1, 1, 32, 16}: 1 ops
+Minimum{2, 14, 14, 192}: 1 ops
+Reshape{2, 14, 14, 64}: 4 ops
+Relu{2, 56, 56, 144}: 3 ops
+Reshape{2, 64, 14, 14}: 4 ops
