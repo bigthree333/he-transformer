@@ -78,6 +78,10 @@ def optimize_for_inference():
 
 
 def main():
+    K.set_learning_phase(0)
+    model = MobileNetV2()
+    model.summary()
+    exit(1)
     if not os.path.isfile('./model/optimized_model.pb'):
         print('Optimizing for inference')
         optimize_for_inference()
@@ -94,11 +98,6 @@ def main():
 
     nodes = [n.name for n in tf.get_default_graph().as_graph_def().node]
     print('nodes', nodes)
-
-    model_vars = tf.trainable_variables()
-    slim.model_analyzer.analyze_vars(model_vars, print_info=True)
-
-    exit(1)
 
     x_test = np.random.random([FLAGS.batch_size, 224, 224, 3])
     x_test = preprocess_input(x_test)

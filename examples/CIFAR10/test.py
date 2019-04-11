@@ -33,17 +33,6 @@ def main():
 
     (x_train, y_train), (x_test, y_test) = cifar10.load_data()
 
-    #if K.image_data_format() == 'channels_first':
-    #    x_train = x_train.reshape(x_train.shape[0], 3, IMAGE_HEIGHT,
-    #                              IMAGE_WIDTH)
-    #    x_test = x_test.reshape(x_test.shape[0], 3, IMAGE_WIDTH, IMAGE_WIDTH)
-    #    input_shape = (1, IMAGE_WIDTH, IMAGE_WIDTH)
-    #else:
-    #    x_train = x_train.reshape(x_train.shape[0], IMAGE_WIDTH, IMAGE_WIDTH,
-    #                              3)
-    #    x_test = x_test.reshape(x_test.shape[0], IMAGE_WIDTH, IMAGE_WIDTH, 3)
-    #    input_shape = (IMAGE_WIDTH, IMAGE_WIDTH, 3)
-
     # The data, split between train and test sets:
     print('x_train shape:', x_train.shape)
     print(x_train.shape, 'train samples')

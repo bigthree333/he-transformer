@@ -65,7 +65,7 @@ def main():
 
     print('y_test', y_test)
 
-    model = squeezenet.Squeezenet()
+    model = squeezenet.SimpleCNN()
     opt = keras.optimizers.SGD()
 
     # Let's train the model using RMSprop

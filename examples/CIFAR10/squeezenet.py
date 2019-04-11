@@ -13,20 +13,11 @@ from keras.models import Sequential
 from keras.layers import Dense, Dropout, Activation, Flatten, Reshape
 from keras.layers import Conv2D, MaxPooling2D, ZeroPadding2D
 from keras.regularizers import l2
-'''def get_variable(name, shape, mode):
-    if mode not in set(['train', 'test']):
-        print('mode should be train or test')
-        raise Exception()
-
-    if mode == 'train':
-        return tf.get_variable(name, shape)
-    else:
-        return tf.constant(
-            np.loadtxt(name + '.txt', dtype=np.float32).reshape(shape))'''
 
 
-def Squeezenet(num_classes=10):
+def SimpleCNN(num_classes=10):
     # Simple Model ~71% accruacy
+    # See https://keras.io/examples/cifar10_cnn/
     input_img = Input(shape=(32, 32, 3), name='input')
     x = Conv2D(32, kernel_size=(3, 3), activation='relu')(input_img)
     x = Conv2D(64, (3, 3), activation='relu')(x)
@@ -39,6 +30,8 @@ def Squeezenet(num_classes=10):
     model = Model(input=input_img, output=[x])
     return model
 
+
+def Squeezenet(num_classes=10):
     # Squeeze1 from https://github.com/kaizouman/tensorsandbox/tree/master/cifar10/models/squeeze
     input_img = Input(shape=(32, 32, 3))
     x = Conv2D(

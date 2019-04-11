@@ -14,7 +14,9 @@
 // limitations under the License.
 //*****************************************************************************
 
+#include <chrono>
 #include <fstream>
+#include <thread>
 #include "he_backend.hpp"
 #include "ngraph/ngraph.hpp"
 #include "test_util.hpp"
@@ -116,4 +118,31 @@ NGRAPH_TEST(${BACKEND_NAME}, nbench_file) {
   shared_ptr<Function> func = deserialize(in);
 
   nbench_summary_perf(he_backend, func);
+}
+
+NGRAPH_TEST(${BACKEND_NAME}, create_cifar10_tensor) {
+  auto backend = runtime::Backend::create("${BACKEND_NAME}");
+  auto he_backend = static_cast<runtime::he::HEBackend*>(backend.get());
+
+  Shape shape{32, 32, 3};
+  auto a = he_backend->create_cipher_tensor(element::f32, shape);
+  std::vector<float> vals(32 * 32 * 3, 1.23);
+  copy_data(a, vals);
+
+  // Wait so we can measure memory accurately
+  std::this_thread::sleep_for(std::chrono::seconds(10));
+}
+
+NGRAPH_TEST(${BACKEND_NAME}, create_imagenet_tensor) {
+  auto backend = runtime::Backend::create("${BACKEND_NAME}");
+  auto he_backend = static_cast<runtime::he::HEBackend*>(backend.get());
+
+  Shape shape{224, 224, 3};
+  auto a = he_backend->create_cipher_tensor(element::f32, shape);
+
+  std::vector<float> vals(224 * 224 * 3, 1.23);
+  copy_data(a, vals);
+
+  // Wait so we can measure memory accurately
+  std::this_thread::sleep_for(std::chrono::seconds(10));
 }
